@@ -136,38 +136,13 @@ public class Robot {
         road.forEach((integer, directionIntegerHashMap) -> {
             if(integer == -1) return;
             directionIntegerHashMap.forEach((direction, roadTurnLong) -> {
-                if(direction == Direction.Down){
-                    int x = this.ownBox.getCurrentPosition().x;
-                    int y = this.ownBox.getCurrentPosition().y;
-                    this.moveTo(new Point(x, y - 1));
-                    x = this.currentPosition.x;
-                    y = this.currentPosition.y;
-                    this.moveToWithBox(new Point(x, y + roadTurnLong));
-                }
-                if(direction == Direction.Up){
-                    int x = this.ownBox.getCurrentPosition().x;
-                    int y = this.ownBox.getCurrentPosition().y;
-                    this.moveTo(new Point(x, y + 1));
-                    x = this.currentPosition.x;
-                    y = this.currentPosition.y;
-                    this.moveToWithBox(new Point(x, y - roadTurnLong));
-                }
-                if(direction == Direction.Right){
-                    int x = this.ownBox.getCurrentPosition().x;
-                    int y = this.ownBox.getCurrentPosition().y;
-                    this.moveTo(new Point(x - 1, y));
-                    x = this.currentPosition.x;
-                    y = this.currentPosition.y;
-                    this.moveToWithBox(new Point(x + roadTurnLong, y));
-                }
-                if(direction == Direction.Left){
-                    int x = this.ownBox.getCurrentPosition().x;
-                    int y = this.ownBox.getCurrentPosition().y;
-                    this.moveTo(new Point(x + 1, y));
-                    x = this.currentPosition.x;
-                    y = this.currentPosition.y;
-                    this.moveToWithBox(new Point(x - roadTurnLong, y));
-                }
+                int x = this.ownBox.getCurrentPosition().x;
+                int y = this.ownBox.getCurrentPosition().y;
+                this.moveTo(new Point(x - direction.getStepByOx() , y - direction.getStepByOy()));
+                x = this.currentPosition.x;
+                y = this.currentPosition.y;
+                this.moveToWithBox(new Point(x + (direction.getStepByOx()) * roadTurnLong,
+                        y + (direction.getStepByOy()) * roadTurnLong));
             });
         });
 
@@ -185,58 +160,42 @@ public class Robot {
         currentPoints.add(start);
         Map<Integer, HashSet<Point>> rangeOfReach = new HashMap<>();
         rangeOfReach.put(currentRange, currentPoints);
-        MapInfo a = MapInfo.getInstance();
 
         while (!rangeOfReach.get(currentRange).contains(finish)){
             HashSet<Point> buffer = new HashSet<>();
 
             for (Point point: rangeOfReach.get(currentRange)){
-                if(point.x >= 0 && point.y >= 0 && (!MapInfo.getInstance().getBlocks().contains(new Point(point.x + 1, point.y))
-                        || isRobotWithBox)){
-                    buffer.add(new Point(point.x + 1, point.y));
-                }
-                if(point.x >= 0 && point.y >= 0 && (!MapInfo.getInstance().getBlocks().contains(new Point(point.x - 1, point.y))
-                        || isRobotWithBox)){
-                    buffer.add(new Point(point.x - 1, point.y));
-                }
-                if(point.x >= 0 && point.y >= 0 && (!MapInfo.getInstance().getBlocks().contains(new Point(point.x, point.y + 1))
-                        || isRobotWithBox)){
-                    buffer.add(new Point(point.x, point.y + 1));
-                }
-                if(point.x >= 0 && point.y >= 0 && (!MapInfo.getInstance().getBlocks().contains(new Point(point.x, point.y - 1))
-                        || isRobotWithBox)){
-                    buffer.add(new Point(point.x, point.y - 1));
+                for(int x = -1; x <= 1; x++) {
+                    for(int y = -1; y <= 1; y++) {
+                        if(Math.abs(x) - Math.abs(y) == 0) {
+                            continue;
+                        }
+                        if(point.x >= 0 && point.y >= 0 && (!MapInfo.getInstance().getBlocks().contains(new Point(point.x + x, point.y + y))
+                                || isRobotWithBox)){
+                            buffer.add(new Point(point.x + x, point.y + y));
+                        }
+                    }
                 }
             }
-
             rangeOfReach.put(++currentRange, buffer);
-
         }
 
         Point point = new Point(finish.x, finish.y);
         path.push(finish);
 
-
         for(; currentRange > 0; currentRange--){
             HashSet<Point> points = rangeOfReach.get(currentRange);
-            if(points.contains(new Point(point.x + 1, point.y))){
-                path.push(new Point(point.x + 1, point.y));
-                point = new Point(point.x + 1, point.y);
-                continue;
-        }
-            if(points.contains(new Point(point.x - 1, point.y))){
-                path.push(new Point(point.x - 1, point.y));
-                point = new Point(point.x - 1, point.y);
-                continue;
-            }
-            if(points.contains(new Point(point.x, point.y + 1))){
-                path.push(new Point(point.x, point.y + 1));
-                point = new Point(point.x, point.y + 1);
-                continue;
-            }
-            if(points.contains(new Point(point.x, point.y - 1))){
-                path.push(new Point(point.x, point.y - 1));
-                point = new Point(point.x, point.y - 1);
+
+            for(int x = -1; x <= 1; x++) {
+                for(int y = -1; y <= 1; y++) {
+                    if(Math.abs(x) - Math.abs(y) == 0) {
+                        continue;
+                    }
+                    if(points.contains(new Point(point.x + x, point.y + y))){
+                        path.push(new Point(point.x + x, point.y + y));
+                        point = new Point(point.x + x, point.y + y);
+                    }
+                }
             }
         }
 
